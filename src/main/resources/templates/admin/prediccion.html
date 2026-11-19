@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo predictivo — Agenda Tutorías</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar-top navbar-top-admin" aria-label="Panel de administración">
+    <div class="navbar-left">
+        <a th:href="@{/admin/dashboard}" class="navbar-brand" aria-label="Inicio admin">
+            <img th:src="@{/img/logo.png}" alt="Comfenalco" onerror="this.style.display='none'">
+            <span class="brand-role-tag">Admin</span>
+        </a>
+        <div class="navbar-sep-v"></div>
+        <nav class="navbar-nav-links">
+            <a th:href="@{/admin/dashboard}" class="nav-link">Dashboard</a>
+            <a th:href="@{/admin/usuarios}" class="nav-link">
+                <i class="bi bi-people" aria-hidden="true"></i> Usuarios
+            </a>
+            <a th:href="@{/admin/retiros}" class="nav-link">
+                <i class="bi bi-cash-coin" aria-hidden="true"></i> Retiros
+            </a>
+            <a th:href="@{/admin/solicitudes-tutor}" class="nav-link">
+                <i class="bi bi-person-check" aria-hidden="true"></i> Solicitudes
+                <span th:if="${solicitudesPendientes > 0}"
+                      class="nav-link-badge"
+                      th:text="${solicitudesPendientes}"></span>
+            </a>
+            <a th:href="@{/admin/prediccion}" class="nav-link active" aria-current="page">
+                <i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Predicción
+            </a>
+        </nav>
+    </div>
+    <div class="navbar-right">
+        <a th:href="@{/logout}" class="btn-nav-danger-sm">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Salir
+        </a>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+    <div class="mb-4">
+        <h2 style="font-family:'Merriweather',serif; color:var(--azul); font-size:1.5rem;">
+            Modelo predictivo de precios
+        </h2>
+        <p style="color:#7f8c8d; margin:0;">
+            Regresión lineal simple: estima el precio por hora de un tutor según sus años de experiencia.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon azul"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${modelo.muestra}">0</h3>
+                    <p>Tutores en la muestra</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon verde"><i class="bi bi-bullseye"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${#numbers.formatDecimal(modelo.r2 * 100, 1, 1)} + '%'">0%</h3>
+                    <p>Precisión (R²)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon naranja"><i class="bi bi-arrow-up-right"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="'$' + ${#numbers.formatDecimal(modelo.pendiente, 0, 'COMMA', 0, 'POINT')}">$0</h3>
+                    <p>Incremento por año</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon azul"><i class="bi bi-currency-dollar"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="'$' + ${#numbers.formatDecimal(modelo.promedioPrecio, 0, 'COMMA', 0, 'POINT')}">$0</h3>
+                    <p>Precio promedio</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-institucional mb-4">
+        <div class="card-header-azul">
+            <i class="bi bi-function me-2"></i>Modelo entrenado
+        </div>
+        <div class="p-4">
+            <p style="margin-bottom:8px;" th:text="${modelo.formula}"></p>
+            <p style="color:#7f8c8d; font-size:0.9rem; margin:0;">
+                <strong>Interpretación:</strong> por cada año adicional de experiencia,
+                el modelo estima un aumento de
+                <strong th:text="'$' + ${#numbers.formatDecimal(modelo.pendiente, 0, 'COMMA', 0, 'POINT')}"></strong>
+                en el precio por hora. Un R² más cercano a 100% indica un mejor ajuste.
+            </p>
+            <div th:if="${!modelo.disponible}" class="alerta alerta-warning mt-3 mb-0">
+                <i class="bi bi-exclamation-triangle"></i>
+                Aún no hay suficientes tutores con experiencia y precio para entrenar el modelo.
+            </div>
+        </div>
+    </div>
+
+    <div class="card-institucional">
+        <div class="card-header-azul">
+            <i class="bi bi-table me-2"></i>Precio actual vs. precio sugerido
+        </div>
+        <div class="p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tutor</th>
+                            <th>Experiencia</th>
+                            <th>Precio actual</th>
+                            <th>Precio sugerido</th>
+                            <th>Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${modelo.predicciones}">
+                            <td th:text="${p.nombre}">Tutor</td>
+                            <td th:text="${p.aniosExperiencia} + ' años'">0 años</td>
+                            <td th:text="'$' + ${#numbers.formatDecimal(p.precioActual ?: 0, 0, 'COMMA', 0, 'POINT')}">$0</td>
+                            <td style="font-weight:700; color:#1e8449;"
+                                th:text="'$' + ${#numbers.formatDecimal(p.precioSugerido ?: 0, 0, 'COMMA', 0, 'POINT')}">$0</td>
+                            <td th:style="${p.diferencia >= 0 ? 'color:#1e8449' : 'color:#c0392b'}"
+                                th:text="${(p.diferencia >= 0 ? '+' : '') + '$' + #numbers.formatDecimal(p.diferencia, 0, 'COMMA', 0, 'POINT')}">
+                                $0
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(modelo.predicciones)}">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No hay tutores con precio y experiencia registrados.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
