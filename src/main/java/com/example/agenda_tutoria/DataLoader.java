@@ -24,7 +24,7 @@ public class DataLoader implements CommandLineRunner {
 
         // Admin principal
         crearSiNoExiste("admin@tutorias.com", "Administrador", "admin123",
-            "ADMIN", null, null, null, null, 0, true);
+            "ADMIN", null, null, null, (Double) null, 0, true);
 
         // Tutores principales
         crearSiNoExiste("carlos.perez@tutorias.com", "Carlos Andrés Pérez",
@@ -39,28 +39,28 @@ public class DataLoader implements CommandLineRunner {
             "Ingeniera matemática con maestría en educación. Especializada en cálculo " +
             "diferencial e integral, álgebra lineal y estadística.",
             Arrays.asList("Cálculo I", "Cálculo II", "Álgebra Lineal", "Estadística"),
-            35000.0, 4, true);
+            38000.0, 4, true);
 
         crearSiNoExiste("juan.martinez@tutorias.com", "Juan David Martínez",
             "tutor123", "PROFESOR", "Bases de Datos",
             "Experto en diseño y administración de bases de datos relacionales y NoSQL. " +
             "Certificado en MongoDB y experiencia con SQL Server, MySQL y PostgreSQL.",
             Arrays.asList("Bases de Datos I", "Bases de Datos II", "MongoDB", "SQL"),
-            40000.0, 5, true);
+            41000.0, 5, true);
 
         crearSiNoExiste("ana.rodriguez@tutorias.com", "Ana Sofía Rodríguez",
             "tutor123", "PROFESOR", "Inglés Técnico",
             "Profesora de inglés certificada por Cambridge con especialización en " +
             "inglés técnico para ingeniería y tecnología. Nivel C1.",
             Arrays.asList("Inglés I", "Inglés II", "Inglés Técnico", "Conversación"),
-            30000.0, 7, true);
+            46000.0, 7, true);
 
         crearSiNoExiste("david.torres@tutorias.com", "David Esteban Torres",
             "tutor123", "PROFESOR", "Redes y Sistemas",
             "Técnico en redes con certificación CCNA. Experiencia en configuración " +
             "de routers, switches, VLANs y protocolos de red.",
             Arrays.asList("Redes I", "Redes II", "Packet Tracer", "Seguridad en Redes"),
-            38000.0, 3, true);
+            35000.0, 3, true);
 
         crearSiNoExiste("laura.jimenez@tutorias.com", "Laura Valentina Jiménez",
             "tutor123", "PROFESOR", "Diseño de Software",
@@ -74,18 +74,18 @@ public class DataLoader implements CommandLineRunner {
             "Ingeniero electrónico con especialización en física aplicada. " +
             "Amplia experiencia enseñando circuitos, electromagnetismo y mecánica.",
             Arrays.asList("Física I", "Física II", "Electrónica Básica", "Circuitos"),
-            36000.0, 8, true);
+            49000.0, 8, true);
 
         crearSiNoExiste("camila.herrera@tutorias.com", "Camila Andrea Herrera",
             "tutor123", "PROFESOR", "Contabilidad y Finanzas",
             "Contadora pública con experiencia en contabilidad empresarial, " +
             "finanzas personales y análisis financiero.",
             Arrays.asList("Contabilidad I", "Contabilidad II", "Finanzas", "Excel Avanzado"),
-            32000.0, 4, true);
+            37000.0, 4, true);
 
         // Estudiante de prueba principal
         crearSiNoExiste("estudiante@tutorias.com", "María García",
-            "est123", "ESTUDIANTE", null, null, null, null, 0, true);
+            "est123", "ESTUDIANTE", null, null, null, (Double) null, 0, true);
 
         sembrarCalificaciones();
 
@@ -100,7 +100,7 @@ public class DataLoader implements CommandLineRunner {
                     Usuario u = new Usuario();
                     u.setNombre("Estudiante Gen " + i);
                     u.setCorreo(correo);
-                    u.setPassword(passwordEncoder.encode("est123")); // Contraseña por defecto para los masivos: est123
+                    u.setPassword(passwordEncoder.encode("est123"));
                     u.setRol("ESTUDIANTE");
                     u.setCuentaVerificada(true);
                     u.setBalance(50000.0);
@@ -110,7 +110,7 @@ public class DataLoader implements CommandLineRunner {
                 }
             }
 
-            // 2. Generar 50 Profesores
+            // 2. Generar 50 Profesores con tendencia realista (experiencia vs. precio)
             String[] materiasDisponibles = {"Matemáticas", "Programación", "Física", "Inglés", "Bases de Datos", "Química"};
             for (int j = 1; j <= 50; j++) {
                 String correo = "profesor" + j + "@tutorias.com";
@@ -118,12 +118,17 @@ public class DataLoader implements CommandLineRunner {
                     Usuario u = new Usuario();
                     u.setNombre("Profesor Tutor " + j);
                     u.setCorreo(correo);
-                    u.setPassword(passwordEncoder.encode("tutor123")); // Contraseña por defecto para los profesores: tutor123
+                    u.setPassword(passwordEncoder.encode("tutor123"));
                     u.setRol("PROFESOR");
                     u.setEspecialidad(materiasDisponibles[j % materiasDisponibles.length]);
                     u.setDescripcion("Profesor experto con años de experiencia en el área.");
-                    u.setPrecioPorHora(35000.0 + (j * 500));
-                    u.setAniosExperiencia(3 + (j % 5));
+
+                    int experiencia = 1 + ((j - 1) / 5);
+                    double variacion = ((j % 5) - 2) * 1000.0;
+                    double precio = 28000.0 + (experiencia * 2500.0) + variacion;
+
+                    u.setAniosExperiencia(experiencia);
+                    u.setPrecioPorHora(precio);
                     u.setCuentaVerificada(true);
                     u.setBalance(0.0);
                     u.setCalificacionPromedio(4.5);
